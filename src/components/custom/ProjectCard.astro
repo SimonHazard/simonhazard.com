@@ -6,9 +6,10 @@ interface Props {
   stack: string[];
   githubUrl?: string;
   liveUrl?: string;
+  releasesUrl?: string;
 }
 import { ArrowUpRight, Layers, Mic, ScanEye, StickyNote } from "@lucide/astro";
-const { title, description, disclaimer, stack, githubUrl, liveUrl } = Astro.props;
+const { title, description, disclaimer, stack, githubUrl, liveUrl, releasesUrl } = Astro.props;
 const identities: Record<string, { label: string; accent: string; icon: typeof Layers }> = {
   Charon: { label: "Capture / Organize", accent: "lime", icon: StickyNote },
   MemeOver: { label: "Connect / Share", accent: "violet", icon: Layers },
@@ -36,6 +37,7 @@ const Icon = identity.icon;
     <ul class="tech-list" aria-label={`${title} technologies`}>{stack.map((tech) => <li>{tech}</li>)}</ul>
     <div class="project-links">
       {liveUrl && <a class="text-link" href={liveUrl} target="_blank" rel="noopener noreferrer" aria-label={`Visit ${title} website`}>Visit project <ArrowUpRight size={15} /></a>}
+      {releasesUrl && <a class="text-link" href={releasesUrl} target="_blank" rel="noopener noreferrer" aria-label={`Download ${title} on GitHub Releases`}>Download <ArrowUpRight size={15} /></a>}
       {githubUrl && <a class="text-link source-link" href={githubUrl} target="_blank" rel="noopener noreferrer" aria-label={`View ${title} source on GitHub`}>Source <ArrowUpRight size={15} /></a>}
     </div>
   </div>
