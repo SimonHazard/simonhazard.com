@@ -24,3 +24,10 @@ yarn-error.log*
 
 # cloudflare
 .wrangler/
+
+# local working files
+/AGENTS.md
+/CLAUDE.md
+/design/
+/assets/
+.claude/

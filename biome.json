@@ -1,10 +1,10 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.4.7/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.5.15/schema.json",
   "assist": { "actions": { "source": { "organizeImports": "on" } } },
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true,
+      "preset": "recommended",
       "correctness": {
         "noUnusedImports": "warn",
         "noUnusedVariables": "warn"
@@ -46,7 +46,16 @@
     }
   },
   "files": {
-    "includes": ["**", "!**/dist", "!**/node_modules", "!**/.astro", "!**/.wrangler"]
+    "includes": [
+      "**",
+      "!**/dist",
+      "!**/node_modules",
+      "!**/.astro",
+      "!**/.wrangler",
+      "!design",
+      "!assets",
+      "!src/content/articles"
+    ]
   },
   "overrides": [
     {
@@ -73,6 +82,16 @@
         "actions": {
           "source": {
             "organizeImports": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["public/**/*.svg"],
+      "linter": {
+        "rules": {
+          "a11y": {
+            "noSvgWithoutTitle": "off"
           }
         }
       }
