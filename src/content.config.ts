@@ -23,6 +23,10 @@ const projects = defineCollection({
     title: z.string(),
     description: z.string(),
     disclaimer: z.string().optional(),
+    /** A decommissioned project keeps its page entry but no longer links to its site. */
+    status: z.enum(["active", "decommissioned"]).default("active"),
+    /** Short factual points shown on the projects page. */
+    highlights: z.array(z.string()).optional(),
     stack: z.array(z.string()),
     githubUrl: z.url().optional(),
     liveUrl: z.url().optional(),

@@ -1,48 +1,104 @@
 ---
-import Base from "@/layouts/Base.astro";
-import Barcode from "@/components/custom/Barcode.astro";
+import ButtonLink from "@/components/custom/ButtonLink.astro";
+import Illustration from "@/components/custom/Illustration.astro";
+import PageHeader from "@/components/custom/PageHeader.astro";
+import { illustrations } from "@/data/illustrations";
+import { externalLinks, RESUME_HREF } from "@/data/navigation";
 import { t } from "@/i18n/utils";
+import Base from "@/layouts/Base.astro";
+
+const paragraphs = [t("about.p1"), t("about.p2"), t("about.p3")];
 ---
 
 <Base title={t("about.title")} description={t("about.description")}>
-  <div class="animate-slide-up about-page">
-    <header class="page-heading"><p class="eyebrow">Behind the projects</p><h1>{t("about.title")}</h1></header>
+  <div class="about shell">
+    <div class="about-text">
+      <PageHeader title={t("about.title")}>
+        <p class="about-role">{t("site.role")}</p>
+      </PageHeader>
 
-    <div class="flex items-center gap-3 mb-6">
-      <Barcode />
-      <span class="label-ui text-muted-foreground">{t("about.bio")}</span>
-    </div>
-
-    <div class="space-y-4 text-foreground leading-relaxed">
-      <p>{t("about.p1")}</p>
-      <p>{t("about.p2")}</p>
-      <p>{t("about.p3")}</p>
-    </div>
-
-    <div class="mt-12">
-      <div class="flex items-center gap-3 mb-6">
-        <Barcode />
-        <span class="label-ui text-muted-foreground">{t("about.contact")}</span>
+      <div class="about-bio">
+        {paragraphs.map((paragraph) => <p>{paragraph}</p>)}
       </div>
 
-      <div class="flex flex-wrap gap-4">
-        <a
-          href="https://github.com/SimonHazard"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="button button-quiet"
-          aria-label="GitHub profile"
-        >
-          GitHub
-        </a>
-        <a
-          href="/static/simon-hazard.pdf"
-          download
-          class="button button-primary"
-        >
-          {t("home.downloadCV")}
-        </a>
-      </div>
+      <section class="about-contact" aria-labelledby="contact-title">
+        <h2 id="contact-title">{t("about.contact")}</h2>
+        <div class="about-actions">
+          <ButtonLink href={externalLinks.github} icon="external" external>
+            {t("links.github")}
+          </ButtonLink>
+          <ButtonLink href={RESUME_HREF} variant="secondary" icon="download" download>
+            {t("links.downloadResume")}
+          </ButtonLink>
+        </div>
+      </section>
     </div>
+
+    <Illustration
+      class="about-art"
+      desktop={{ image: illustrations.aboutObservatory, position: "50% 50%" }}
+      sizes="(min-width: 64rem) 36rem, 100vw"
+      widths={[480, 768, 1024]}
+    />
   </div>
 </Base>
+
+<style>
+  .about {
+    display: grid;
+    gap: 2.5rem;
+  }
+
+  .about-role {
+    margin-top: 1rem;
+    color: var(--ink-muted);
+    font-size: 0.8125rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  .about-bio {
+    display: grid;
+    gap: 1.25rem;
+    max-width: 36rem;
+    font-size: 1.125rem;
+    line-height: 1.65;
+  }
+
+  .about-contact {
+    margin-top: 2.5rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--rule);
+  }
+
+  .about-contact h2 {
+    font-size: 1.5rem;
+  }
+
+  .about-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1.25rem;
+  }
+
+  .about :global(.about-art) {
+    aspect-ratio: 4 / 3;
+    border-radius: 3px;
+  }
+
+  @media (min-width: 64rem) {
+    .about {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 36rem);
+      align-items: start;
+      gap: 4rem;
+    }
+
+    .about :global(.about-art) {
+      position: sticky;
+      top: 2rem;
+      aspect-ratio: 2 / 3;
+      margin-top: clamp(2.5rem, 6vw, 4.5rem);
+    }
+  }
+</style>

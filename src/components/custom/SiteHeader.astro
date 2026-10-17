@@ -1,0 +1,301 @@
+---
+import { ArrowUpRight, Download, Menu, X } from "@lucide/astro";
+import { externalLinks, homeLink, isCurrentPath, primaryNav, RESUME_HREF } from "@/data/navigation";
+import { t } from "@/i18n/utils";
+import ThemeToggle from "./ThemeToggle.astro";
+import Wordmark from "./Wordmark.astro";
+
+const { pathname } = Astro.url;
+const withCurrent = (links: readonly { href: string; label: string }[]) =>
+  links.map((link) => ({ ...link, current: isCurrentPath(link.href, pathname) }));
+
+const navLinks = withCurrent(primaryNav);
+const menuLinks = withCurrent([homeLink, ...primaryNav]);
+---
+
+<header class="site-header">
+  <div class="header-bar shell">
+    <Wordmark />
+    <nav class="primary-nav" aria-label={t("nav.label")}>
+      <ul role="list">
+        {
+          navLinks.map(({ href, label, current }) => (
+            <li>
+              <a href={href} aria-current={current ? "page" : undefined}>
+                {label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+    <div class="header-actions">
+      <ThemeToggle />
+      <button
+        type="button"
+        class="menu-trigger"
+        aria-haspopup="dialog"
+        aria-controls="site-menu"
+        data-menu-open
+      >
+        <Menu size={24} aria-hidden="true" />
+        <span class="sr-only">{t("nav.openMenu")}</span>
+      </button>
+    </div>
+  </div>
+
+  <dialog id="site-menu" class="menu-panel" aria-label={t("nav.menu")}>
+    <div class="menu-bar">
+      <Wordmark />
+      <button type="button" class="menu-close" data-menu-close>
+        <X size={24} aria-hidden="true" />
+        <span class="sr-only">{t("nav.closeMenu")}</span>
+      </button>
+    </div>
+    <nav aria-label={t("nav.label")}>
+      <ul class="menu-pages" role="list">
+        {
+          menuLinks.map(({ href, label, current }) => (
+            <li>
+              <a href={href} aria-current={current ? "page" : undefined}>
+                {label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+    <ul class="menu-extras" role="list">
+      <li>
+        <a href={externalLinks.github} target="_blank" rel="noopener noreferrer">
+          <span>
+            {t("links.github")}
+            <span class="sr-only">{` (${t("links.opensInNewTab")})`}</span>
+          </span>
+          <ArrowUpRight size={18} aria-hidden="true" />
+        </a>
+      </li>
+      <li>
+        <a href={RESUME_HREF} download>
+          <span>{t("links.downloadResume")}</span>
+          <Download size={18} aria-hidden="true" />
+        </a>
+      </li>
+      <li>
+        <ThemeToggle variant="row" />
+      </li>
+    </ul>
+  </dialog>
+</header>
+
+<script>
+  const menu = document.querySelector<HTMLDialogElement>("#site-menu");
+  const openButton = document.querySelector<HTMLButtonElement>("[data-menu-open]");
+
+  if (menu && openButton) {
+    openButton.addEventListener("click", () => menu.showModal());
+    menu.querySelector("[data-menu-close]")?.addEventListener("click", () => menu.close());
+    menu.addEventListener("close", () => {
+      if (openButton.checkVisibility()) openButton.focus();
+    });
+
+    // The panel only exists for narrow screens: close it if the viewport widens.
+    window.matchMedia("(min-width: 48rem)").addEventListener("change", (event) => {
+      if (event.matches && menu.open) menu.close();
+    });
+  }
+</script>
+
+<style>
+  .site-header {
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .header-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0 3rem;
+    min-height: 4.5rem;
+    padding-block: 0.75rem;
+  }
+
+  .primary-nav ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 2rem;
+  }
+
+  .primary-nav a {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    font-size: 0.9375rem;
+  }
+
+  .primary-nav a::after {
+    position: absolute;
+    inset-inline: 0;
+    bottom: 0.5rem;
+    height: 2px;
+    background-color: var(--ink-muted);
+    content: "";
+    scale: 0 1;
+    transform-origin: left;
+    transition: scale var(--duration-quick) var(--ease-out);
+  }
+
+  .primary-nav a[aria-current="page"]::after {
+    scale: 1 1;
+  }
+
+  /* Reduced motion: the underline appears without the wipe. */
+  @media (prefers-reduced-motion: reduce) {
+    .primary-nav a::after {
+      transition: none;
+    }
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin-left: auto;
+  }
+
+  .menu-trigger,
+  .menu-close {
+    display: inline-grid;
+    place-items: center;
+    min-width: 44px;
+    min-height: 44px;
+    color: var(--ink);
+    cursor: pointer;
+    transition: scale var(--duration-quick) var(--ease-out);
+  }
+
+  .menu-trigger:active,
+  .menu-close:active {
+    scale: var(--press-scale-icon);
+  }
+
+  .menu-trigger {
+    display: none;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .primary-nav a:hover::after {
+      scale: 1 1;
+    }
+  }
+
+  /*
+   * Narrow screens: with JavaScript the links move into the menu panel; without it they
+   * stay visible on their own row so navigation never depends on scripts.
+   */
+  @media (width < 48rem) {
+    .header-bar {
+      gap: 0 1rem;
+    }
+
+    .primary-nav {
+      order: 3;
+      width: 100%;
+    }
+
+    .primary-nav ul {
+      gap: 0 1.25rem;
+    }
+
+    :global(.js) .primary-nav {
+      display: none;
+    }
+
+    :global(.js) .menu-trigger {
+      display: inline-grid;
+    }
+  }
+
+  .menu-panel {
+    width: 100%;
+    max-width: none;
+    height: 100dvh;
+    max-height: none;
+    margin: 0;
+    padding: 0.75rem var(--gutter) 2rem;
+    overflow-y: auto;
+    border: 0;
+    background-color: var(--surface-page);
+    color: var(--ink);
+    opacity: 0;
+    translate: 0 var(--enter-offset);
+    transition:
+      opacity var(--duration-base) var(--ease-out),
+      translate var(--duration-base) var(--ease-out),
+      overlay var(--duration-base) allow-discrete,
+      display var(--duration-base) allow-discrete;
+  }
+
+  .menu-panel[open] {
+    opacity: 1;
+    translate: 0 0;
+  }
+
+  @starting-style {
+    .menu-panel[open] {
+      opacity: 0;
+      translate: 0 var(--enter-offset);
+    }
+  }
+
+  .menu-panel::backdrop {
+    background-color: transparent;
+  }
+
+  :global(html:has(.menu-panel[open])) {
+    overflow: hidden;
+  }
+
+  .menu-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 3rem;
+    margin-bottom: 2rem;
+  }
+
+  .menu-pages {
+    display: grid;
+    gap: 0.25rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .menu-pages a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 3rem;
+    font-family: var(--type-display);
+    font-size: 2.25rem;
+    line-height: 1.1;
+  }
+
+  .menu-pages a[aria-current="page"] {
+    text-decoration-line: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 0.2em;
+  }
+
+  .menu-extras {
+    display: grid;
+    padding-top: 1rem;
+  }
+
+  .menu-extras a {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 3rem;
+  }
+</style>

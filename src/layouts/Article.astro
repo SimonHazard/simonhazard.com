@@ -1,7 +1,11 @@
 ---
-import Base from "./Base.astro";
-import { formatDate } from "@/lib/utils";
+import { ArrowLeft } from "@lucide/astro";
+import { getImage } from "astro:assets";
+import Tag from "@/components/custom/Tag.astro";
+import { illustrations } from "@/data/illustrations";
 import { t } from "@/i18n/utils";
+import { formatDate } from "@/lib/utils";
+import Base from "./Base.astro";
 
 interface Props {
   title: string;
@@ -14,43 +18,229 @@ interface Props {
   ai?: boolean;
 }
 
-const { title, description, date, category, tags, lang, cover, ai } = Astro.props;
+const { title, description, date, category, tags, lang, cover, ai = false } = Astro.props;
+const tagTones = ["lavender", "rose", "gold", "turquoise"] as const;
+const langLabel = lang === "fr" ? t("lang.fr") : t("lang.en");
+
+// Decorative side borders: one transparent image, cropped to its left and right edges.
+const borders = await getImage({ src: illustrations.articleBorders, format: "webp" });
 ---
 
-<Base title={title} description={description} ogImage={cover}>
-  <article class="animate-in reading-page">
-    <header class="mb-10">
-      <div class="flex items-center gap-3 mb-4">
-        <span class="label-ui text-primary">{category}</span>
-        <span class="label-ui text-muted-foreground">{formatDate(date, lang)}</span>
-        <span class="label-ui border border-input px-1.5 py-0.5 text-muted-foreground">{lang.toUpperCase()}</span>
-      </div>
+<Base title={title} description={description} ogImage={cover} article={{ publishedTime: date, lang }}>
+  <div class="reading">
+    <img
+      class="reading-border reading-border--left"
+      src={borders.src}
+      width={borders.attributes.width}
+      height={borders.attributes.height}
+      alt=""
+      loading="lazy"
+      decoding="async"
+    />
+    <img
+      class="reading-border reading-border--right"
+      src={borders.src}
+      width={borders.attributes.width}
+      height={borders.attributes.height}
+      alt=""
+      loading="lazy"
+      decoding="async"
+    />
 
-      <h1 class="font-black text-3xl md:text-4xl mb-4">{title}</h1>
+    <div class="reading-column">
+      <nav class="crumbs" aria-label={t("nav.breadcrumb")}>
+        <a href="/articles">{t("articles.title")}</a>
+        <span aria-hidden="true">/</span>
+        <span class="crumbs-category">{category}</span>
+      </nav>
 
-      <p class="text-lg text-muted-foreground">{description}</p>
-
-      <div class="flex flex-wrap gap-2 mt-4">
-        {tags.map((tag) => (
-          <span class="inline-flex items-center font-mono text-[10px] uppercase tracking-[0.15em] border border-input px-2 py-0.5 text-muted-foreground">
-            {tag}
-          </span>
-        ))}
-        {ai && (
-          <span class="relative group/ai inline-flex">
-            <span class="inline-flex items-center font-mono text-[10px] uppercase tracking-[0.15em] border border-input px-2 py-0.5 text-muted-foreground cursor-help">
-              {t("articles.aiAssisted")}
+      <article lang={lang}>
+        <header class="reading-header">
+          <h1>{title}</h1>
+          <p class="reading-lead">{description}</p>
+          <div class="reading-meta">
+            <time datetime={date.toISOString()}>{formatDate(date, lang)}</time>
+            <span lang="en">
+              <span aria-hidden="true">{lang.toUpperCase()}</span>
+              <span class="sr-only">{langLabel}</span>
             </span>
-            <span class="absolute top-full left-0 mt-2 w-56 p-2.5 text-[10px] font-mono normal-case tracking-normal leading-relaxed bg-card border border-border text-muted-foreground opacity-0 group-hover/ai:opacity-100 transition-opacity duration-150 pointer-events-none z-20">
-              {t("articles.aiAssistedDescription")}
-            </span>
-          </span>
-        )}
-      </div>
-    </header>
+            {
+              ai && (
+                <details class="ai-note" lang="en">
+                  <summary>{t("articles.aiAssisted")}</summary>
+                  <p>{t("articles.aiAssistedDescription")}</p>
+                </details>
+              )
+            }
+          </div>
+          <ul class="reading-tags" role="list">
+            {
+              tags.map((tag, index) => (
+                <li>
+                  <Tag tone={tagTones[index % tagTones.length]}>{tag}</Tag>
+                </li>
+              ))
+            }
+          </ul>
+        </header>
 
-    <div class="article-prose max-w-none">
-      <slot />
+        <div class="prose">
+          <slot />
+        </div>
+      </article>
+
+      <a href="/articles" class="reading-back">
+        <ArrowLeft size={18} aria-hidden="true" />
+        {t("articles.back")}
+      </a>
     </div>
-  </article>
+  </div>
 </Base>
+
+<style>
+  .reading {
+    position: relative;
+    overflow: clip;
+  }
+
+  .reading-column {
+    width: min(var(--measure), 100% - 2 * var(--gutter));
+    margin-inline: auto;
+    padding-top: clamp(2.5rem, 6vw, 4rem);
+  }
+
+  .crumbs {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    color: var(--ink-muted);
+    font-size: 0.8125rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  .crumbs a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .crumbs a:hover {
+      text-decoration-line: underline;
+      text-underline-offset: 0.25em;
+    }
+  }
+
+  h1 {
+    margin-top: 1rem;
+    font-size: clamp(2.5rem, 1.8rem + 3vw, 4rem);
+    line-height: 1;
+    letter-spacing: -0.01em;
+  }
+
+  .reading-lead {
+    margin-top: 1.25rem;
+    font-size: 1.25rem;
+    line-height: 1.5;
+  }
+
+  .reading-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.25rem 1.25rem;
+    margin-top: 1.25rem;
+    color: var(--ink-muted);
+    font-size: 0.9375rem;
+  }
+
+  .ai-note summary {
+    cursor: pointer;
+    text-decoration-line: underline;
+    text-decoration-style: dotted;
+    text-underline-offset: 0.25em;
+  }
+
+  .ai-note p {
+    margin-top: 0.35rem;
+    color: var(--ink);
+  }
+
+  /* The note fades in and out; browsers without ::details-content just show it at once. */
+  .ai-note::details-content {
+    opacity: 0;
+    transition:
+      opacity var(--duration-base) var(--ease-out),
+      content-visibility var(--duration-base) allow-discrete;
+  }
+
+  .ai-note[open]::details-content {
+    opacity: 1;
+  }
+
+  .reading-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1.25rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--rule-strong);
+  }
+
+  .prose {
+    margin-top: 2rem;
+  }
+
+  .reading-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 44px;
+    margin-top: 3rem;
+    padding-top: 1rem;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .reading-back:hover {
+      text-decoration-line: underline;
+      text-underline-offset: 0.25em;
+    }
+  }
+
+  /*
+   * Side borders only where they fit beside the reading column. Fixed height, never stretched
+   * with long articles; they fade out and are clipped by the reading area.
+   */
+  .reading-border {
+    display: none;
+  }
+
+  @media (min-width: 80rem) {
+    .reading-border {
+      --border-height: 70rem;
+
+      position: absolute;
+      top: 0;
+      display: block;
+      height: var(--border-height);
+      object-fit: cover;
+      mask-image: linear-gradient(to bottom, #000 75%, transparent);
+      pointer-events: none;
+      user-select: none;
+    }
+
+    /* The source keeps its left border in the first 26% and its right one after 72%. */
+    .reading-border--left {
+      left: 0;
+      width: calc(var(--border-height) * 1122 / 1402 * 0.26);
+      object-position: left top;
+    }
+
+    .reading-border--right {
+      right: 0;
+      width: calc(var(--border-height) * 1122 / 1402 * 0.28);
+      object-position: right top;
+    }
+  }
+</style>

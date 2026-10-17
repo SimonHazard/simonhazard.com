@@ -1,39 +1,83 @@
 ---
-import Base from "@/layouts/Base.astro";
-import ArticleCard from "@/components/custom/ArticleCard.astro";
 import { getCollection } from "astro:content";
+import ArticleRow from "@/components/custom/ArticleRow.astro";
+import ButtonLink from "@/components/custom/ButtonLink.astro";
+import Illustration from "@/components/custom/Illustration.astro";
+import Ornament from "@/components/custom/Ornament.astro";
+import PageHeader from "@/components/custom/PageHeader.astro";
+import { illustrations } from "@/data/illustrations";
 import { t } from "@/i18n/utils";
+import Base from "@/layouts/Base.astro";
 import { sortByDate } from "@/lib/utils";
 
-const devblogArticles = await getCollection(
-  "articles",
-  ({ data }) => !data.draft && data.category === "devblog",
+const devblogArticles = sortByDate(
+  await getCollection("articles", ({ data }) => !data.draft && data.category === "devblog"),
 );
-const sorted = sortByDate(devblogArticles);
 ---
 
 <Base title={t("devblog.title")} description={t("devblog.description")}>
-  <div>
-    <h1 class="font-black text-3xl md:text-4xl mb-4">{t("devblog.title")}</h1>
-    <p class="text-muted-foreground mb-10">{t("devblog.subtitle")}</p>
+  <div class="shell">
+    <PageHeader title={t("devblog.title")} lead={t("devblog.subtitle")} />
+    <Illustration
+      class="devblog-art"
+      desktop={{ image: illustrations.devblogStudy, position: "45% 60%" }}
+      sizes="(min-width: 84rem) 84rem, 100vw"
+      widths={[640, 1024, 1440]}
+    />
 
-    <div class="grid gap-4">
-      {sorted.length > 0 ? (
-        sorted.map((article) => (
-          <ArticleCard
-            title={article.data.title}
-            description={article.data.description}
-            date={article.data.date}
-            category={article.data.category}
-            tags={article.data.tags}
-            lang={article.data.lang}
-            href={`/articles/${article.id}`}
-            ai={article.data.ai}
-          />
-        ))
+    {
+      devblogArticles.length > 0 ? (
+        <ul class="article-list" role="list">
+          {devblogArticles.map(({ id, data }) => (
+            <li>
+              <ArticleRow href={`/articles/${id}`} article={data} variant="full" headingLevel="h2" />
+            </li>
+          ))}
+        </ul>
       ) : (
-        <p class="text-muted-foreground text-center py-12">{t("devblog.empty")}</p>
-      )}
-    </div>
+        <div class="devblog-empty">
+          <Ornament />
+          <p>{t("devblog.empty")}</p>
+          <ButtonLink href="/articles" variant="secondary" icon="arrow-right">
+            {t("devblog.readArticles")}
+          </ButtonLink>
+        </div>
+      )
+    }
   </div>
 </Base>
+
+<style>
+  .shell :global(.devblog-art) {
+    aspect-ratio: 4 / 3;
+    border-radius: 3px;
+  }
+
+  .article-list {
+    margin-top: 2rem;
+  }
+
+  .article-list > li {
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .devblog-empty {
+    display: grid;
+    justify-items: center;
+    gap: 1.5rem;
+    padding-top: clamp(2.5rem, 5vw, 3.5rem);
+    text-align: center;
+  }
+
+  .devblog-empty p {
+    font-family: var(--type-display);
+    font-size: clamp(1.75rem, 1.4rem + 1.4vw, 2.5rem);
+    line-height: 1.15;
+  }
+
+  @media (min-width: 40rem) {
+    .shell :global(.devblog-art) {
+      aspect-ratio: 12 / 5;
+    }
+  }
+</style>

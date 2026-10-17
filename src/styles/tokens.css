@@ -1,0 +1,94 @@
+/*
+ * Design tokens. The raw palette comes from AGENTS.md; semantic roles switch with the theme.
+ * On light surfaces only abyss and indigo carry text: the accent hues fail contrast there
+ * and are kept for rules, fills and tag backgrounds (see design/implementation-plan.md §4.1).
+ */
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-*: initial;
+  --color-abyss: #101c35;
+  --color-indigo: #283a68;
+  --color-turquoise: #54c5ba;
+  --color-lavender: #ac8bcb;
+  --color-rose: #d58ba5;
+  --color-gold: #e5b965;
+  --color-ivory: #e8dac6;
+  --color-transparent: transparent;
+  --color-current: currentColor;
+
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@theme inline {
+  --color-page: var(--surface-page);
+  --color-raised: var(--surface-raised);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-rule: var(--rule);
+  --color-panel: var(--panel);
+  --color-panel-ink: var(--panel-ink);
+
+  --font-display: var(--type-display);
+  --font-sans: var(--type-text);
+  --font-mono: var(--type-mono);
+}
+
+:root {
+  color-scheme: light;
+
+  /* Lightened ivory for long reading; the palette ivory is kept for raised surfaces. */
+  --surface-page: #f3ebdf;
+  --surface-raised: var(--color-ivory);
+  --ink: var(--color-abyss);
+  --ink-muted: var(--color-indigo);
+  --rule: color-mix(in oklab, var(--color-abyss) 16%, transparent);
+  --rule-strong: color-mix(in oklab, var(--color-abyss) 42%, transparent);
+  --accent-line: var(--color-lavender);
+  --focus-ring: var(--color-abyss);
+  --panel: var(--color-abyss);
+  --panel-ink: var(--color-ivory);
+
+  --type-display: var(--font-newsreader);
+  --type-text: var(--font-hanken-grotesk);
+  --type-mono: var(--font-jetbrains-mono);
+
+  --gutter: clamp(1rem, 4vw, 3rem);
+  --shell: 84rem;
+  --measure: 42.5rem;
+
+  --duration-quick: 150ms;
+  --duration-base: 200ms;
+
+  /* Movement amounts. Reduced motion zeroes them; opacity and colour transitions remain. */
+  --press-scale: 0.97;
+  --press-scale-icon: 0.95;
+  --nudge: 2px;
+  --enter-offset: -0.5rem;
+  --enter-scale: 0.6;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --press-scale: 1;
+    --press-scale-icon: 1;
+    --nudge: 0px;
+    --enter-offset: 0px;
+    --enter-scale: 1;
+  }
+}
+
+.dark {
+  color-scheme: dark;
+
+  --surface-page: var(--color-abyss);
+  --surface-raised: #17264a;
+  --ink: var(--color-ivory);
+  --ink-muted: var(--color-lavender);
+  --rule: color-mix(in oklab, var(--color-ivory) 16%, transparent);
+  --rule-strong: color-mix(in oklab, var(--color-ivory) 42%, transparent);
+  --focus-ring: var(--color-gold);
+  --panel: #17264a;
+  --panel-ink: var(--color-ivory);
+}

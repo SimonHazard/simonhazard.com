@@ -1,0 +1,35 @@
+---
+interface Props {
+  title: string;
+  /** One factual sentence under the title, when the page needs it. */
+  lead?: string;
+}
+
+const { title, lead } = Astro.props;
+---
+
+<header class="page-header">
+  <h1>{title}</h1>
+  {lead && <p>{lead}</p>}
+  <slot />
+</header>
+
+<style>
+  .page-header {
+    padding-block: clamp(2.5rem, 6vw, 4.5rem) clamp(1.5rem, 3vw, 2.25rem);
+  }
+
+  h1 {
+    font-size: clamp(2.75rem, 2rem + 4vw, 5rem);
+    line-height: 1;
+    letter-spacing: -0.01em;
+  }
+
+  p {
+    max-width: 40rem;
+    margin-top: 0.75rem;
+    color: var(--ink-muted);
+    font-size: 1.1875rem;
+    line-height: 1.5;
+  }
+</style>

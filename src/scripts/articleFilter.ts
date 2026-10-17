@@ -1,62 +1,81 @@
-let activeCategory = "";
-let activeTag = "";
+import { t } from "@/i18n/utils";
 
-const articleEls = Array.from(document.querySelectorAll<HTMLElement>("#articles-grid > div"));
-const noResults = document.getElementById("no-results");
-const catBtns = Array.from(document.querySelectorAll<HTMLElement>(".filter-cat"));
-const tagBtns = Array.from(document.querySelectorAll<HTMLElement>(".filter-tag"));
+/** Filters the article list by one category and one tag at most. */
 
-function setButtonActive(btn: HTMLElement, active: boolean) {
-  btn.setAttribute("aria-pressed", String(active));
-  if (active) {
-    btn.classList.remove("border-input", "text-muted-foreground");
-    btn.classList.add("border-primary", "text-primary");
-  } else {
-    btn.classList.remove("border-primary", "text-primary");
-    btn.classList.add("border-input", "text-muted-foreground");
-  }
+interface FilterState {
+  category: string;
+  tag: string;
 }
 
-function filterArticles() {
+const state: FilterState = { category: "", tag: "" };
+
+const filters = document.querySelector<HTMLElement>("[data-filters]");
+const items = Array.from(document.querySelectorAll<HTMLElement>("[data-article-list] > li"));
+const categoryButtons = Array.from(
+  document.querySelectorAll<HTMLButtonElement>("[data-filter-category]"),
+);
+const tagButtons = Array.from(document.querySelectorAll<HTMLButtonElement>("[data-filter-tag]"));
+const status = document.querySelector<HTMLElement>("[data-filter-status]");
+const emptyState = document.querySelector<HTMLElement>("[data-filter-empty]");
+const clearButton = document.querySelector<HTMLButtonElement>("[data-filter-clear]");
+
+function matches(item: HTMLElement): boolean {
+  const tags = (item.dataset.tags ?? "").split(",");
+  const categoryMatches = !state.category || item.dataset.category === state.category;
+  const tagMatches = !state.tag || tags.includes(state.tag);
+  return categoryMatches && tagMatches;
+}
+
+function countLabel(count: number): string {
+  return count === 1
+    ? t("articles.countOne")
+    : t("articles.countOther").replace("{count}", String(count));
+}
+
+function render(): void {
   let visible = 0;
-
-  for (const el of articleEls) {
-    const cat = el.dataset.articleCategory || "";
-    const tags = (el.dataset.articleTags || "").split(",");
-    const matchCat = !activeCategory || cat === activeCategory;
-    const matchTag = !activeTag || tags.includes(activeTag);
-
-    if (matchCat && matchTag) {
-      el.style.display = "";
-      visible++;
-    } else {
-      el.style.display = "none";
-    }
+  for (const item of items) {
+    const shown = matches(item);
+    item.hidden = !shown;
+    if (shown) visible += 1;
   }
-
-  if (noResults) {
-    noResults.classList.toggle("hidden", visible > 0);
+  for (const button of categoryButtons) {
+    const pressed = (button.dataset.filterCategory ?? "") === state.category;
+    button.setAttribute("aria-pressed", String(pressed));
   }
+  for (const button of tagButtons) {
+    button.setAttribute("aria-pressed", String(button.dataset.filterTag === state.tag));
+  }
+  if (emptyState) emptyState.hidden = visible > 0;
+  if (status) status.textContent = visible > 0 ? countLabel(visible) : t("articles.noResults");
 }
 
-document.addEventListener("click", (e) => {
-  const catBtn = (e.target as HTMLElement).closest<HTMLElement>(".filter-cat");
-  if (catBtn) {
-    activeCategory = catBtn.dataset.category || "";
-    for (const b of catBtns) {
-      setButtonActive(b, (b.dataset.category || "") === activeCategory);
-    }
-    filterArticles();
+filters?.addEventListener("click", (event) => {
+  if (!(event.target instanceof Element)) return;
+
+  const categoryButton = event.target.closest<HTMLButtonElement>("[data-filter-category]");
+  if (categoryButton) {
+    state.category = categoryButton.dataset.filterCategory ?? "";
+    render();
     return;
   }
 
-  const tagBtn = (e.target as HTMLElement).closest<HTMLElement>(".filter-tag");
-  if (tagBtn) {
-    const tag = tagBtn.dataset.tag || "";
-    activeTag = activeTag === tag ? "" : tag;
-    for (const b of tagBtns) {
-      setButtonActive(b, (b.dataset.tag || "") === activeTag);
-    }
-    filterArticles();
+  const tagButton = event.target.closest<HTMLButtonElement>("[data-filter-tag]");
+  if (tagButton) {
+    const tag = tagButton.dataset.filterTag ?? "";
+    state.tag = state.tag === tag ? "" : tag;
+    render();
   }
 });
+
+clearButton?.addEventListener("click", () => {
+  state.category = "";
+  state.tag = "";
+  render();
+  // The clear button disappears with the empty state: keep focus on the filters.
+  categoryButtons[0]?.focus();
+});
+
+// From now on, rows revealed by a filter fade in (the initial render stays still).
+const root = document.querySelector<HTMLElement>("[data-filter-root]");
+if (root) root.dataset.ready = "";

@@ -1,0 +1,91 @@
+---
+import { ArrowRight } from "@lucide/astro";
+
+interface Props {
+  id: string;
+  title: string;
+  /** Number of items shown in the section, displayed as « / 03 ». */
+  count?: number;
+  link?: { href: string; label: string };
+}
+
+const { id, title, count, link } = Astro.props;
+---
+
+<div class="section-head">
+  <h2 id={id}>
+    {title}
+    {count !== undefined && <span class="section-head-count" aria-hidden="true">/ {String(count).padStart(2, "0")}</span>}
+  </h2>
+  <span class="section-head-rule" aria-hidden="true"></span>
+  {
+    link && (
+      <a href={link.href} class="section-head-link">
+        {link.label}
+        <ArrowRight size={16} aria-hidden="true" />
+      </a>
+    )
+  }
+</div>
+
+<style>
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  h2 {
+    font-size: clamp(1.75rem, 1.4rem + 1.4vw, 2.5rem);
+    white-space: nowrap;
+  }
+
+  .section-head-count {
+    margin-left: 0.35em;
+    color: var(--ink-muted);
+    font-size: 0.55em;
+  }
+
+  .section-head-rule {
+    flex: 1;
+    align-self: center;
+    height: 1px;
+    background-color: var(--rule-strong);
+  }
+
+  .section-head-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 44px;
+    font-size: 0.9375rem;
+    white-space: nowrap;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .section-head-link:hover {
+      text-decoration-line: underline;
+      text-underline-offset: 0.25em;
+    }
+  }
+
+  @media (width < 40rem) {
+    .section-head {
+      gap: 1rem;
+    }
+  }
+
+  /* Very narrow screens: drop the rule and let the link wrap under the title. */
+  @media (width < 25rem) {
+    .section-head {
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 0 1rem;
+    }
+
+    .section-head-rule {
+      display: none;
+    }
+  }
+</style>

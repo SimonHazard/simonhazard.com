@@ -1,0 +1,47 @@
+---
+interface Props {
+  /** Background hue; text stays abyss, which keeps contrast on every tone. */
+  tone?: "neutral" | "lavender" | "rose" | "gold" | "turquoise";
+}
+
+const { tone = "neutral" } = Astro.props;
+---
+
+<span class:list={["tag", `tag--${tone}`]}><slot /></span>
+
+<style>
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.2rem 0.6rem;
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    font-size: 0.8125rem;
+    line-height: 1.4;
+    white-space: nowrap;
+  }
+
+  .tag--lavender,
+  .tag--rose,
+  .tag--gold,
+  .tag--turquoise {
+    border-color: transparent;
+    color: var(--color-abyss);
+  }
+
+  .tag--lavender {
+    background-color: color-mix(in oklab, var(--color-lavender) 45%, var(--color-ivory));
+  }
+
+  .tag--rose {
+    background-color: color-mix(in oklab, var(--color-rose) 45%, var(--color-ivory));
+  }
+
+  .tag--gold {
+    background-color: color-mix(in oklab, var(--color-gold) 55%, var(--color-ivory));
+  }
+
+  .tag--turquoise {
+    background-color: color-mix(in oklab, var(--color-turquoise) 40%, var(--color-ivory));
+  }
+</style>

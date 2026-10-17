@@ -1,0 +1,119 @@
+---
+import { Moon, Sun } from "@lucide/astro";
+import { t } from "@/i18n/utils";
+
+interface Props {
+  /** `icon` for the header, `row` for the mobile menu where the label is visible. */
+  variant?: "icon" | "row";
+}
+
+const { variant = "icon" } = Astro.props;
+---
+
+<button
+  type="button"
+  class:list={["theme-switch", `theme-switch--${variant}`]}
+  aria-label={t("theme.toDark")}
+  data-theme-toggle
+  data-label-to-dark={t("theme.toDark")}
+  data-label-to-light={t("theme.toLight")}
+>
+  {variant === "row" && <span>{t("theme.label")}</span>}
+  <span class="theme-icons" aria-hidden="true">
+    <span class="theme-icon theme-icon--moon"><Moon size={20} /></span>
+    <span class="theme-icon theme-icon--sun"><Sun size={20} /></span>
+  </span>
+</button>
+
+<script>
+  const root = document.documentElement;
+  const toggles = document.querySelectorAll<HTMLButtonElement>("[data-theme-toggle]");
+
+  function syncLabels(): void {
+    const dark = root.classList.contains("dark");
+    for (const toggle of toggles) {
+      const label = dark ? toggle.dataset.labelToLight : toggle.dataset.labelToDark;
+      if (label) toggle.setAttribute("aria-label", label);
+    }
+  }
+
+  for (const toggle of toggles) {
+    toggle.addEventListener("click", () => {
+      // The page switches theme at once: colour transitions are paused for that frame so
+      // buttons and chips do not lag behind the background. Only the icon swap animates.
+      root.classList.add("theme-changing");
+      const dark = root.classList.toggle("dark");
+      requestAnimationFrame(() => requestAnimationFrame(() => root.classList.remove("theme-changing")));
+      try {
+        localStorage.setItem("theme", dark ? "dark" : "light");
+      } catch {
+        /* The theme still applies for this visit without storage. */
+      }
+      syncLabels();
+    });
+  }
+
+  syncLabels();
+</script>
+
+<style>
+  .theme-switch {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    min-width: 44px;
+    min-height: 44px;
+    border-radius: 2px;
+    color: var(--ink);
+    cursor: pointer;
+    transition:
+      background-color var(--duration-quick) ease,
+      scale var(--duration-quick) var(--ease-out);
+  }
+
+  .theme-switch--icon:active {
+    scale: var(--press-scale-icon);
+  }
+
+  .theme-switch--row {
+    justify-content: space-between;
+    width: 100%;
+    font-size: 1rem;
+  }
+
+  /* Without JavaScript the toggle cannot work: hide it rather than show a dead control. */
+  :global(html:not(.js)) .theme-switch {
+    display: none;
+  }
+
+  /* Both icons share one cell and crossfade; the hidden one shrinks slightly. */
+  .theme-icons {
+    display: grid;
+  }
+
+  .theme-icon {
+    display: grid;
+    grid-area: 1 / 1;
+    transition:
+      opacity var(--duration-base) var(--ease-out),
+      scale var(--duration-base) var(--ease-out);
+  }
+
+  .theme-icon--sun,
+  :global(.dark) .theme-icon--moon {
+    opacity: 0;
+    scale: var(--enter-scale);
+  }
+
+  :global(.dark) .theme-icon--sun {
+    opacity: 1;
+    scale: 1;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .theme-switch--icon:hover {
+      background-color: var(--surface-raised);
+    }
+  }
+</style>

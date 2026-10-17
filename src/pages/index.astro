@@ -1,12 +1,14 @@
 ---
-import Base from "@/layouts/Base.astro";
-import ArticleCard from "@/components/custom/ArticleCard.astro";
-import ProjectCard from "@/components/custom/ProjectCard.astro";
-import Orbital from "@/components/custom/Orbital.astro";
-import Barcode from "@/components/custom/Barcode.astro";
 import { getCollection } from "astro:content";
-import { ArrowUpRight, ArrowDown, ArrowRight } from "@lucide/astro";
+import ArticleRow from "@/components/custom/ArticleRow.astro";
+import ButtonLink from "@/components/custom/ButtonLink.astro";
+import Illustration from "@/components/custom/Illustration.astro";
+import ProjectCard from "@/components/custom/ProjectCard.astro";
+import SectionHeading from "@/components/custom/SectionHeading.astro";
+import { illustrations } from "@/data/illustrations";
+import { RESUME_HREF } from "@/data/navigation";
 import { t } from "@/i18n/utils";
+import Base from "@/layouts/Base.astro";
 import { sortByDate } from "@/lib/utils";
 
 const [allArticles, featuredProjects] = await Promise.all([
@@ -16,46 +18,162 @@ const [allArticles, featuredProjects] = await Promise.all([
 const latestArticles = sortByDate(allArticles).slice(0, 3);
 ---
 
-<Base title="Web developer & maker" description="Independent projects, useful tools, and field notes on building for the web. Explore Simon Hazard’s portfolio.">
-  <section class="hero" aria-labelledby="hero-title">
-    <div class="hero-topline label-ui"><span><i class="status-dot"></i> Web developer / TypeScript</span><span class="hero-edition">Personal portfolio · {new Date().getFullYear()}</span></div>
-    <div class="hero-body">
-      <div class="hero-copy">
-        <h1 id="hero-title" class="hero-title">SIMON<span>HAZARD<span class="name-period" aria-hidden="true">✳</span></span></h1>
-        <p class="hero-description">Useful tools.<br /><span>A playful state of mind.</span></p>
-        <p class="hero-intro">I build for the web and beyond. A collection of independent projects, experiments, and things learned along the way.</p>
-        <div class="hero-actions">
-          <a href="#selected-work" class="button button-primary">Explore my work <ArrowDown size={16} /></a>
-          <a href="/static/simon-hazard.pdf" download class="button button-quiet">{t("home.downloadCV")} <ArrowUpRight size={16} /></a>
-        </div>
+<Base description={t("home.description")}>
+  <section class="hero" aria-labelledby="hero-name">
+    <Illustration
+      class="hero-art"
+      desktop={{ image: illustrations.heroDesktop, position: "65% 50%" }}
+      mobile={{ image: illustrations.heroMobile, position: "50% 50%" }}
+      priority
+    />
+    <div class="hero-copy shell">
+      <p class="hero-role">{t("site.role")}</p>
+      <h1 id="hero-name">{t("site.name")}</h1>
+      <div class="hero-actions">
+        <ButtonLink href="#selected-work" icon="arrow-down">{t("home.exploreWork")}</ButtonLink>
+        <ButtonLink href={RESUME_HREF} variant="secondary" icon="download" download>
+          {t("links.downloadResume")}
+        </ButtonLink>
       </div>
-      <Orbital />
-    </div>
-    <div class="hero-bottom"><button class="motion-toggle label-ui" data-motion-toggle aria-pressed="false" hidden><span data-motion-label>Pause motion</span><span aria-hidden="true">Ⅱ</span></button></div>
-  </section>
-
-  <section id="selected-work" class="portfolio-section" aria-labelledby="work-title">
-    <div class="section-heading" data-reveal>
-      <div><p class="eyebrow">From idea to release</p><h2 id="work-title">Selected work<span class="section-count">/{String(featuredProjects.length).padStart(2, "0")}</span></h2></div>
-      <a href="/projects" class="text-link">All projects <ArrowUpRight size={16} /></a>
-    </div>
-    <div class="project-grid">
-      {featuredProjects.map((project) => <ProjectCard {...project.data} />)}
     </div>
   </section>
 
-  <section class="portfolio-section journal-section" aria-labelledby="journal-title">
-    <div class="section-heading" data-reveal>
-      <div><p class="eyebrow">Notes from the process</p><h2 id="journal-title">Field notes<span class="section-count">/ Blog</span></h2></div>
-      <a href="/articles" class="text-link">All articles <ArrowUpRight size={16} /></a>
-    </div>
-    <div class="journal-list">
-      {latestArticles.map((article) => <ArticleCard {...article.data} href={`/articles/${article.id}`} />)}
-    </div>
+  <section id="selected-work" class="home-section shell" aria-labelledby="work-title">
+    <SectionHeading
+      id="work-title"
+      title={t("home.selectedWork")}
+      count={featuredProjects.length}
+      link={{ href: "/projects", label: t("home.allProjects") }}
+    />
+    <ul class="featured-grid" role="list">
+      {
+        featuredProjects.map((project) => (
+          <li>
+            <ProjectCard id={project.id} project={project.data} variant="featured" />
+          </li>
+        ))
+      }
+    </ul>
   </section>
 
-  <section class="about-strip" data-reveal>
-    <div><Barcode /><p class="eyebrow">The person behind the projects</p></div>
-    <div><h2>Curiosity is the common thread.</h2><p>Front-end development, open-source tools, video games and board games. I like understanding how things work — then making something of my own.</p><a href="/about" class="text-link">A little more about me <ArrowRight size={16} /></a></div>
+  <section class="home-section shell" aria-labelledby="articles-title">
+    <SectionHeading
+      id="articles-title"
+      title={t("home.articles")}
+      link={{ href: "/articles", label: t("home.allArticles") }}
+    />
+    <ul class="latest-grid" role="list">
+      {
+        latestArticles.map((article) => (
+          <li>
+            <ArticleRow href={`/articles/${article.id}`} article={article.data} variant="compact" />
+          </li>
+        ))
+      }
+    </ul>
   </section>
 </Base>
+
+<style>
+  /*
+   * The illustration is a light scene in both themes, so the hero keeps light tokens.
+   * Narrow screens stack the copy on the sky colours sampled from the top of hero-mobile,
+   * then the whole illustration fades in below it; wide screens overlay the copy on the sky.
+   */
+  .hero {
+    --ink: var(--color-abyss);
+    --ink-muted: var(--color-indigo);
+    --surface-page: #f3ebdf;
+    --surface-raised: var(--color-ivory);
+    --focus-ring: var(--color-abyss);
+
+    display: grid;
+    background: linear-gradient(to bottom, #ae90d8, #c595d1);
+    color: var(--ink);
+    color-scheme: light;
+  }
+
+  .hero :global(.hero-art) {
+    order: 2;
+    aspect-ratio: 4 / 3;
+    margin-top: -4rem;
+    mask-image: linear-gradient(to bottom, transparent, #000 35%);
+  }
+
+  .hero-copy {
+    z-index: 1;
+    padding-block: 2.5rem 1rem;
+  }
+
+  .hero-role {
+    font-size: 0.8125rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  h1 {
+    margin-top: 0.75rem;
+    font-size: clamp(3rem, 2rem + 5vw, 6rem);
+    line-height: 0.95;
+    letter-spacing: -0.01em;
+  }
+
+  .hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 2rem;
+  }
+
+  .home-section {
+    margin-top: clamp(3.5rem, 7vw, 5.5rem);
+    scroll-margin-top: 1.5rem;
+  }
+
+  .featured-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr));
+    gap: 1.25rem;
+  }
+
+  .latest-grid {
+    border-top: 1px solid var(--rule);
+  }
+
+  .latest-grid > li {
+    border-bottom: 1px solid var(--rule);
+  }
+
+  @media (min-width: 64rem) {
+    .hero {
+      height: clamp(26rem, 37vw, 40rem);
+      background: none;
+    }
+
+    .hero > :global(*) {
+      grid-area: 1 / 1;
+    }
+
+    .hero :global(.hero-art) {
+      aspect-ratio: auto;
+      margin-top: 0;
+      mask-image: none;
+    }
+
+    .hero-copy {
+      align-self: center;
+      padding-block: 0;
+    }
+
+    .latest-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0 2.5rem;
+      border-top: 0;
+    }
+
+    .latest-grid > li {
+      border-top: 1px solid var(--rule);
+    }
+  }
+</style>

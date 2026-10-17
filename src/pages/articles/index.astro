@@ -1,80 +1,174 @@
 ---
-import Base from "@/layouts/Base.astro";
-import ArticleCard from "@/components/custom/ArticleCard.astro";
 import { getCollection } from "astro:content";
+import ArticleRow from "@/components/custom/ArticleRow.astro";
+import Illustration from "@/components/custom/Illustration.astro";
+import PageHeader from "@/components/custom/PageHeader.astro";
+import { illustrations } from "@/data/illustrations";
 import { t } from "@/i18n/utils";
+import Base from "@/layouts/Base.astro";
 import { sortByDate } from "@/lib/utils";
 
-const allArticles = await getCollection("articles", ({ data }) => !data.draft);
-const sorted = sortByDate(allArticles);
-
-const categories = ["tech"] as const;
-const allTags = [...new Set(allArticles.flatMap((a) => a.data.tags))].sort();
+const articles = sortByDate(await getCollection("articles", ({ data }) => !data.draft));
+const categories = [...new Set(articles.map(({ data }) => data.category))].sort();
+const tags = [...new Set(articles.flatMap(({ data }) => data.tags))].sort();
 ---
 
 <Base title={t("articles.title")} description={t("articles.description")}>
-  <div>
-    <header class="page-heading"><p class="eyebrow">Articles / Development journal</p><h1>Field notes.</h1><p>What worked, what changed, and what I learned while building.</p></header>
+  <div class="shell" data-filter-root>
+    <PageHeader title={t("articles.title")} />
+    <Illustration
+      class="articles-banner"
+      desktop={{ image: illustrations.articlesLibrary, position: "50% 55%" }}
+      sizes="(min-width: 84rem) 84rem, 100vw"
+      widths={[640, 1024, 1440, 1920]}
+    />
 
-    <div class="flex flex-wrap gap-2 mb-6" id="category-filters">
-      <button
-        type="button"
-        data-category=""
-        class="filter-cat active label-ui px-3 py-1.5 border rounded-sm transition-all duration-75 cursor-pointer border-primary text-primary"
-        aria-pressed="true"
-      >
-        {t("articles.all")}
-      </button>
-      {categories.map((cat) => (
-        <button
-          type="button"
-          data-category={cat}
-          class="filter-cat label-ui px-3 py-1.5 border rounded-sm transition-all duration-75 cursor-pointer border-input text-muted-foreground hover:border-primary hover:text-primary"
-          aria-pressed="false"
-        >
-          {cat}
+    <div class="filters" data-filters>
+      <div class="filter-group" role="group" aria-label={t("articles.filterCategory")}>
+        <button type="button" class="chip" data-filter-category="" aria-pressed="true">
+          {t("articles.all")}
         </button>
-      ))}
-    </div>
-
-    {allTags.length > 0 && (
-      <div class="flex flex-wrap gap-2 mb-10" id="tag-filters">
-        {allTags.map((tag) => (
-          <button
-            type="button"
-            data-tag={tag}
-            class="filter-tag label-ui px-2 py-0.5 border rounded-sm transition-all duration-75 cursor-pointer border-input text-muted-foreground hover:border-primary hover:text-primary"
-            aria-pressed="false"
-          >
-            {tag}
-          </button>
-        ))}
+        {
+          categories.map((category) => (
+            <button type="button" class="chip chip--category" data-filter-category={category} aria-pressed="false">
+              {category}
+            </button>
+          ))
+        }
       </div>
-    )}
-
-    <div class="journal-list" id="articles-grid">
-      {sorted.map((article) => (
-        <div data-article-category={article.data.category} data-article-tags={article.data.tags.join(",")}>
-          <ArticleCard
-            title={article.data.title}
-            description={article.data.description}
-            date={article.data.date}
-            category={article.data.category}
-            tags={article.data.tags}
-            lang={article.data.lang}
-            href={`/articles/${article.id}`}
-            ai={article.data.ai}
-          />
-        </div>
-      ))}
+      <div class="filter-group" role="group" aria-label={t("articles.filterTag")}>
+        {
+          tags.map((tag) => (
+            <button type="button" class="chip" data-filter-tag={tag} aria-pressed="false">
+              {tag}
+            </button>
+          ))
+        }
+      </div>
     </div>
 
-    <p class="text-muted-foreground text-center py-12 hidden" id="no-results">
-      {t("articles.noResults")}
-    </p>
+    <p class="sr-only" role="status" data-filter-status></p>
+
+    <ul class="article-list" role="list" data-article-list>
+      {
+        articles.map(({ id, data }) => (
+          <li data-category={data.category} data-tags={data.tags.join(",")}>
+            <ArticleRow href={`/articles/${id}`} article={data} variant="full" headingLevel="h2" />
+          </li>
+        ))
+      }
+    </ul>
+
+    <div class="empty-state" data-filter-empty hidden>
+      <p>{t("articles.noResults")}</p>
+      <button type="button" class="chip" data-filter-clear>{t("articles.clearFilters")}</button>
+    </div>
   </div>
 </Base>
 
 <script>
   import "@/scripts/articleFilter";
 </script>
+
+<style>
+  .shell :global(.articles-banner) {
+    aspect-ratio: 5 / 2;
+    border-radius: 3px;
+  }
+
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 1.5rem;
+    margin-block: 2rem 1rem;
+  }
+
+  /* Filters only work with JavaScript; without it every article stays listed. */
+  :global(html:not(.js)) .filters {
+    display: none;
+  }
+
+  .filter-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .filter-group + .filter-group {
+    padding-left: 1.5rem;
+    border-left: 1px solid var(--rule);
+  }
+
+  .chip {
+    min-height: 2.25rem;
+    padding: 0.35rem 0.9rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: 3px;
+    color: var(--ink);
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition:
+      background-color var(--duration-quick) ease,
+      color var(--duration-quick) ease,
+      scale var(--duration-quick) var(--ease-out);
+  }
+
+  .chip:active {
+    scale: var(--press-scale);
+  }
+
+  .chip--category {
+    text-transform: capitalize;
+  }
+
+  .chip[aria-pressed="true"] {
+    border-color: var(--ink);
+    background-color: var(--ink);
+    color: var(--surface-page);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .chip[aria-pressed="false"]:hover,
+    [data-filter-clear]:hover {
+      background-color: var(--surface-raised);
+    }
+  }
+
+  .article-list > li {
+    border-bottom: 1px solid var(--rule);
+  }
+
+  /*
+   * Rows and the empty state fade in when a filter reveals them (they leave display: none).
+   * Scoped to the ready list so the first render of the page does not fade.
+   */
+  [data-filter-root][data-ready] .article-list > li,
+  [data-filter-root][data-ready] .empty-state {
+    transition: opacity var(--duration-base) var(--ease-out);
+
+    @starting-style {
+      opacity: 0;
+    }
+  }
+
+  .empty-state {
+    display: grid;
+    justify-items: center;
+    gap: 1rem;
+    padding-block: 3rem;
+    color: var(--ink-muted);
+  }
+
+  @media (min-width: 40rem) {
+    .shell :global(.articles-banner) {
+      aspect-ratio: 5 / 1;
+    }
+  }
+
+  @media (width < 40rem) {
+    .filter-group + .filter-group {
+      padding-left: 0;
+      border-left: 0;
+    }
+  }
+</style>

@@ -1,0 +1,79 @@
+/* Element defaults shared by every page. Component styles live in their components. */
+
+@layer base {
+  * {
+    border-color: var(--rule);
+  }
+
+  html {
+    scrollbar-gutter: stable;
+    text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--surface-page);
+    color: var(--ink);
+    font-family: var(--type-text);
+    font-size: 1.0625rem;
+    line-height: 1.6;
+    overflow-wrap: break-word;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  :where(h1, h2, h3, h4) {
+    font-family: var(--type-display);
+    font-weight: 400;
+    line-height: 1.1;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  :where(a, button) {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  ::selection {
+    background-color: var(--color-gold);
+    color: var(--color-abyss);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 3px;
+  }
+
+  [hidden] {
+    display: none !important;
+  }
+
+  /*
+   * Reduced motion: movement comes from the tokens in tokens.css, which drop to zero here.
+   * Short opacity and colour transitions are kept; keyframe animations and smooth scrolling are not.
+   */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/* Centered page column with responsive gutters. */
+@utility shell {
+  width: min(var(--shell), 100% - 2 * var(--gutter));
+  margin-inline: auto;
+}
+
+/* Set for one frame by the theme toggle: the theme applies at once, except for its own icon. */
+.theme-changing *:not(.theme-icon),
+.theme-changing *::before,
+.theme-changing *::after {
+  transition: none !important;
+}

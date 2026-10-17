@@ -1,0 +1,74 @@
+---
+import { ArrowUpRight, Download } from "@lucide/astro";
+import { externalLinks, RESUME_HREF } from "@/data/navigation";
+import { t } from "@/i18n/utils";
+
+const externals = [
+  { href: externalLinks.github, label: t("links.github") },
+  { href: externalLinks.kofi, label: t("links.kofi") },
+];
+---
+
+<footer class="page-footer">
+  <div class="footer-bar shell">
+    <p>{t("site.name")}</p>
+    <ul class="colophon-links" role="list">
+      {
+        externals.map(({ href, label }) => (
+          <li>
+            <a href={href} target="_blank" rel="noopener noreferrer">
+              {label}
+              <span class="sr-only">{` (${t("links.opensInNewTab")})`}</span>
+              <ArrowUpRight size={14} aria-hidden="true" />
+            </a>
+          </li>
+        ))
+      }
+      <li>
+        <a href={RESUME_HREF} download>
+          {t("links.resume")}
+          <Download size={14} aria-hidden="true" />
+        </a>
+      </li>
+    </ul>
+  </div>
+</footer>
+
+<style>
+  .page-footer {
+    margin-top: clamp(4rem, 8vw, 6rem);
+    border-top: 1px solid var(--rule);
+  }
+
+  .footer-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem 2rem;
+    padding-block: 1.25rem;
+    color: var(--ink-muted);
+    font-size: 0.875rem;
+  }
+
+  .colophon-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 1.75rem;
+  }
+
+  .colophon-links a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    min-height: 44px;
+    color: var(--ink);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .colophon-links a:hover {
+      text-decoration-line: underline;
+      text-underline-offset: 0.25em;
+    }
+  }
+</style>

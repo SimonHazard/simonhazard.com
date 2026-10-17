@@ -1,27 +1,57 @@
 ---
-import Base from "@/layouts/Base.astro";
-import ProjectCard from "@/components/custom/ProjectCard.astro";
 import { getCollection } from "astro:content";
+import Illustration from "@/components/custom/Illustration.astro";
+import PageHeader from "@/components/custom/PageHeader.astro";
+import ProjectCard from "@/components/custom/ProjectCard.astro";
+import { illustrations } from "@/data/illustrations";
 import { t } from "@/i18n/utils";
-const allProjects = await getCollection("projects");
+import Base from "@/layouts/Base.astro";
+
+const projects = await getCollection("projects");
 ---
 
 <Base title={t("projects.title")} description={t("projects.description")}>
-  <div>
-    <header class="page-heading"><p class="eyebrow">Independent projects & experiments</p><h1>Built out of curiosity.</h1><p>Tools for everyday work. Games for good company. Explore the things I make.</p></header>
-
-    <div class="project-grid all-projects">
-      {allProjects.map((project) => (
-        <ProjectCard
-          title={project.data.title}
-          description={project.data.description}
-          disclaimer={project.data.disclaimer}
-          stack={project.data.stack}
-          githubUrl={project.data.githubUrl}
-          liveUrl={project.data.liveUrl}
-          releasesUrl={project.data.releasesUrl}
-        />
-      ))}
-    </div>
+  <div class="shell">
+    <PageHeader title={t("projects.title")} />
+    <Illustration
+      class="projects-banner"
+      desktop={{ image: illustrations.heroDesktop, position: "62% 42%" }}
+      sizes="(min-width: 84rem) 84rem, 100vw"
+      widths={[640, 1024, 1440, 1920]}
+    />
+    <ul class="projects-grid" role="list">
+      {
+        projects.map((project) => (
+          <li>
+            <ProjectCard id={project.id} project={project.data} variant="full" headingLevel="h2" />
+          </li>
+        ))
+      }
+    </ul>
   </div>
 </Base>
+
+<style>
+  .shell :global(.projects-banner) {
+    aspect-ratio: 5 / 2;
+    border-radius: 3px;
+  }
+
+  .projects-grid {
+    display: grid;
+    gap: 1.25rem;
+    margin-top: clamp(2rem, 4vw, 3rem);
+  }
+
+  @media (min-width: 40rem) {
+    .shell :global(.projects-banner) {
+      aspect-ratio: 4 / 1;
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .projects-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+</style>

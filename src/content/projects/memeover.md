@@ -4,6 +4,7 @@ description: "An overlay application that lets friends send memes to each other 
 stack: ["Tauri", "Rust", "ElysiaJS", "Bun", "Astro", "TypeScript"]
 githubUrl: "https://github.com/SimonHazard/MemeOver"
 liveUrl: "https://memeover.simonhazard.com/"
+releasesUrl: "https://github.com/SimonHazard/MemeOver/releases"
 featured: true
 ---
 
